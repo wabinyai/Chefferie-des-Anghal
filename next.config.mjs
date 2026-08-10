@@ -2,7 +2,6 @@ import path from 'path';
 
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   images: {
     remotePatterns: [
       {
@@ -11,13 +10,7 @@ const nextConfig = {
       }
     ]
   },
-  i18n: {
-    locales: ['fr', 'en', 'alur'],
-    defaultLocale: 'fr'
-  },
-  experimental: {
-    typedRoutes: true
-  }
+  typedRoutes: true
 };
 
 export default nextConfig;

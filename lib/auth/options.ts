@@ -1,10 +1,10 @@
-import { AuthOptions } from '@auth/core';
-import CredentialsProvider from '@auth/core/providers/credentials';
+import { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 import dbConnect from '@/lib/db/mongoose';
 import User from '@/models/User';
 
-export const authOptions: AuthOptions = {
+export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60
@@ -33,6 +33,7 @@ export const authOptions: AuthOptions = {
         return {
           id: user._id.toString(),
           email: user.email,
+          name: user.name,
           role: user.role
         };
       }
@@ -41,7 +42,7 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
+        token.role = user.role as string;
       }
       return token;
     },

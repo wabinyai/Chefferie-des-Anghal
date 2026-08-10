@@ -1,8 +1,7 @@
-import { MongooseAdapter } from '@auth/mongoose-adapter';
-import { authOptions as nextAuthOptions } from '@/lib/auth/options';
 import dbConnect from '@/lib/db/mongoose';
+import { authOptions } from '@/lib/auth/options';
 
-export async function getAuthOptions(req: Request) {
+export async function getAuthOptions() {
   await dbConnect();
-  return nextAuthOptions;
+  return authOptions;
 }
