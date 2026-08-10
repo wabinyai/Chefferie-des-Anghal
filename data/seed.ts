@@ -43,7 +43,7 @@ export async function seedInitialData() {
     await Role.updateOne({ key: roleData.key }, { $set: roleData }, { upsert: true });
   }
 
-  await User.updateOne(
+  const adminResult = await User.updateOne(
     { email: initialAdminEmail.trim().toLowerCase() },
     {
       $setOnInsert: {
@@ -68,4 +68,9 @@ export async function seedInitialData() {
   for (const setting of settings) {
     await SiteSetting.updateOne({ key: setting.key }, { $set: setting }, { upsert: true });
   }
+
+  return {
+    adminCreated: adminResult.upsertedCount > 0,
+    email: initialAdminEmail.trim().toLowerCase()
+  };
 }
