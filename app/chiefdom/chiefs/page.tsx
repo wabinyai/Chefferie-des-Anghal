@@ -5,6 +5,8 @@ import { serializeChief, type ChiefRecord } from '@/lib/chiefs';
 
 const PORTRAIT_PLACEHOLDER = '/images/chief-portrait-placeholder.svg';
 
+export const dynamic = 'force-dynamic';
+
 function getPortraitSource(portrait?: string) {
   if (!portrait || portrait.startsWith('/')) {
     return portrait || PORTRAIT_PLACEHOLDER;
