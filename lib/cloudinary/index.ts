@@ -1,14 +1,25 @@
 import { v2 as cloudinary, UploadApiOptions } from 'cloudinary';
 
-if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-  throw new Error('Cloudinary environment variables are required');
+const cloudinaryUrl = process.env.CLOUDINARY_URL;
+const cloudinaryCloudName = process.env.CLOUDINARY_CLOUD_NAME;
+const cloudinaryApiKey = process.env.CLOUDINARY_API_KEY;
+const cloudinaryApiSecret = process.env.CLOUDINARY_API_SECRET;
+
+if (!cloudinaryUrl && (!cloudinaryCloudName || !cloudinaryApiKey || !cloudinaryApiSecret)) {
+  throw new Error('Cloudinary environment variables are required: either CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET');
 }
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true
+  secure: true,
+  ...(
+    cloudinaryUrl
+      ? { cloudinary_url: cloudinaryUrl }
+      : {
+          cloud_name: cloudinaryCloudName,
+          api_key: cloudinaryApiKey,
+          api_secret: cloudinaryApiSecret
+        }
+  )
 });
 
 export async function uploadImage(url: string, publicId: string, folder = 'anghal/gallery') {
