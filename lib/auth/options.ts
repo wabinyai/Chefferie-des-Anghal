@@ -23,12 +23,13 @@ export const authOptions: NextAuthOptions = {
         }
 
         await dbConnect();
-        const user = await User.findOne({ email: credentials.email.toLowerCase(), archived: false }).select('+passwordHash');
+        const email = credentials.email.trim().toLowerCase();
+        const user = await User.findOne({ email, archived: false, disabled: false })
+          .select('+passwordHash');
         if (!user) return null;
 
         const isValid = await compare(credentials.password, user.passwordHash);
         if (!isValid) return null;
-        if (user.disabled) return null;
 
         return {
           id: user._id.toString(),
@@ -42,14 +43,15 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role as string;
+        token.id = user.id;
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
-      if (token?.role) {
-        session.user = session.user || {};
-        session.user.role = token.role as string;
+      if (session.user && token.id && token.role) {
+        session.user.id = token.id;
+        session.user.role = token.role;
       }
       return session;
     }

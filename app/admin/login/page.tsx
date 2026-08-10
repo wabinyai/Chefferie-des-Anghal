@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 type LoginFormValues = {
   email: string;
@@ -11,6 +12,7 @@ type LoginFormValues = {
 };
 
 export default function AdminLoginPage() {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register, handleSubmit } = useForm<LoginFormValues>({
@@ -32,9 +34,12 @@ export default function AdminLoginPage() {
 
     if (!result?.ok) {
       setError('Échec de la connexion. Vérifiez vos identifiants.');
+      setIsSubmitting(false);
+      return;
     }
 
-    setIsSubmitting(false);
+    router.replace('/admin');
+    router.refresh();
   }
 
   return (
@@ -49,11 +54,11 @@ export default function AdminLoginPage() {
         <form className="mt-10 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <label className="space-y-2 text-sm text-neutral-700">
             <span>Adresse e-mail</span>
-            <input type="email" {...register('email')} required className="w-full rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none ring-brand-200 transition focus:ring-2" />
+            <input type="email" autoComplete="email" {...register('email')} required className="w-full rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none ring-brand-200 transition focus:ring-2" />
           </label>
           <label className="space-y-2 text-sm text-neutral-700">
             <span>Mot de passe</span>
-            <input type="password" {...register('password')} required className="w-full rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none ring-brand-200 transition focus:ring-2" />
+            <input type="password" autoComplete="current-password" {...register('password')} required className="w-full rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none ring-brand-200 transition focus:ring-2" />
           </label>
 
           {error ? <p className="text-sm text-red-600">{error}</p> : null}

@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 
-export interface IChief extends Document {
+export interface IChief extends Document<Types.ObjectId> {
   order: number;
   fullName: string;
   customaryName: string;
@@ -67,5 +67,6 @@ const ChiefSchema = new Schema<IChief>(
 
 ChiefSchema.index({ fullName: 'text', customaryName: 'text', biography: 'text' });
 
-const Chief = mongoose.models.Chief || mongoose.model<IChief>('Chief', ChiefSchema);
+const Chief = (mongoose.models.Chief as mongoose.Model<IChief> | undefined)
+  ?? mongoose.model<IChief>('Chief', ChiefSchema);
 export default Chief;

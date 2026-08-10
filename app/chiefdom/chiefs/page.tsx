@@ -1,13 +1,33 @@
 import dbConnect from '@/lib/db/mongoose';
 import Chief from '@/models/Chief';
-import Link from 'next/link';
+import Image from 'next/image';
+import { serializeChief, type ChiefRecord } from '@/lib/chiefs';
+
+const PORTRAIT_PLACEHOLDER = '/images/chief-portrait-placeholder.svg';
+
+function getPortraitSource(portrait?: string) {
+  if (!portrait || portrait.startsWith('/')) {
+    return portrait || PORTRAIT_PLACEHOLDER;
+  }
+
+  try {
+    return new URL(portrait).hostname.endsWith('.cloudinary.com')
+      ? portrait
+      : PORTRAIT_PLACEHOLDER;
+  } catch {
+    return PORTRAIT_PLACEHOLDER;
+  }
+}
 
 async function getChiefs() {
   await dbConnect();
-  return Chief.find({ status: 'published' })
+  const chiefs = await Chief.find({ status: 'published' })
+    .select('order fullName customaryName portrait reignStart reignEnd predecessor successor biography status')
     .sort('order')
-    .populate('predecessor successor')
-    .lean();
+    .populate('predecessor successor', 'fullName')
+    .lean<ChiefRecord[]>();
+
+  return chiefs.map(serializeChief);
 }
 
 export default async function ChiefsPage() {
@@ -20,11 +40,6 @@ export default async function ChiefsPage() {
           <p className="text-sm uppercase tracking-[0.32em] text-brand-700">Royaume</p>
           <h1 className="text-4xl font-serif font-semibold text-neutral-950">Les Chefs de la Chefferie des Anghal</h1>
           <p className="mt-4 text-neutral-700 leading-8">Explorez la succession royale des dirigeants d’Anghal, leurs biographies, leurs années de règne et l’héritage qu’ils ont construit.</p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link href="/admin/chiefs" className="rounded-full border border-brand-700 bg-brand-50 px-5 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-100">
-              Voir le CMS des chefs
-            </Link>
-          </div>
         </div>
 
         <div className="grid gap-6">
@@ -37,10 +52,13 @@ export default async function ChiefsPage() {
               <article key={chief._id.toString()} className="rounded-[2rem] border border-neutral-200 bg-neutral-50 p-8 shadow-sm">
                 <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start">
                   <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white">
-                    <img
-                      src={chief.portrait || '/images/chief-portrait-placeholder.svg'}
+                    <Image
+                      src={getPortraitSource(chief.portrait)}
                       alt={chief.fullName}
-                      className="h-full w-full object-cover"
+                      width={440}
+                      height={560}
+                      sizes="(min-width: 1024px) 220px, 100vw"
+                      className="aspect-[11/14] h-auto w-full object-cover"
                     />
                   </div>
                   <div>

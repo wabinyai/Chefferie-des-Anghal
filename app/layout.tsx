@@ -12,9 +12,6 @@ export const metadata: Metadata = {
     description: 'Heritage, governance, community, and development of the Anghal Chiefdom.',
     type: 'website',
     url: process.env.NEXT_PUBLIC_SITE_URL || 'https://example-anghal.chiefdom'
-  },
-  icons: {
-    icon: '/favicon.ico'
   }
 };
 

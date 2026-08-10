@@ -1,6 +1,13 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { getCmsSession } from '@/lib/auth/session';
 
-export default function AdminDashboardPage() {
+export default async function AdminDashboardPage() {
+  const session = await getCmsSession();
+  if (!session) {
+    redirect('/admin/login');
+  }
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-16 lg:px-10">
       <section className="space-y-6">
@@ -12,9 +19,9 @@ export default function AdminDashboardPage() {
             <Link href="/admin/chiefs" className="rounded-full border border-brand-700 bg-brand-50 px-5 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-100">
               Gérer les souverains
             </Link>
-            <Link href="/admin/login" className="rounded-full border border-neutral-900 bg-neutral-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800">
-              Se connecter
-            </Link>
+            <span className="rounded-full border border-neutral-200 bg-neutral-50 px-5 py-3 text-sm text-neutral-700">
+              Connecté : {session.user.name || session.user.email}
+            </span>
           </div>
         </div>
         <div className="grid gap-6 md:grid-cols-2">

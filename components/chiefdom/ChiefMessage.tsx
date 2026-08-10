@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface ChiefMessageProps {
   portrait: string;
@@ -23,16 +24,16 @@ export function ChiefMessage({ portrait, fullName, customaryTitle, message }: Ch
         <div className="flex flex-col justify-center gap-6 rounded-[2rem] border border-neutral-200 bg-neutral-50 p-8 shadow-soft">
           <div className="space-y-4">
             <p className="text-sm uppercase tracking-[0.32em] text-brand-700">Message du Chef</p>
-            <p className="text-xl font-serif font-semibold text-neutral-950">Un appel à l'unité, au souvenir et au progrès des jeunes générations.</p>
+            <p className="text-xl font-serif font-semibold text-neutral-950">Un appel à l&apos;unité, au souvenir et au progrès des jeunes générations.</p>
             <p className="text-base leading-8 text-neutral-700">{message}</p>
           </div>
           <div className="flex flex-wrap gap-4 pt-2">
-            <a href="/the-chief" className="rounded-full border border-neutral-900 bg-white px-6 py-3 text-sm font-semibold text-neutral-950 transition hover:bg-neutral-100">
+            <Link href="/chiefdom/chiefs" className="rounded-full border border-neutral-900 bg-white px-6 py-3 text-sm font-semibold text-neutral-950 transition hover:bg-neutral-100">
               Biographie complète
-            </a>
-            <a href="/official-statements" className="rounded-full bg-brand-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
-              Déclarations officielles
-            </a>
+            </Link>
+            <Link href="/news" className="rounded-full bg-brand-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
+              Actualités officielles
+            </Link>
           </div>
         </div>
       </div>

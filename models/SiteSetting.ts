@@ -1,10 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-interface ITranslation {
-  locale: 'fr' | 'en' | 'alur';
-  value: string;
-}
-
 export interface ISiteSetting extends Document {
   key: string;
   label: string;

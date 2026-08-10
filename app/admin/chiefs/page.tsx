@@ -56,7 +56,12 @@ export default function AdminChiefsPage() {
     try {
       const response = await fetch('/api/chiefs');
       const data = await response.json();
-      setChiefs(data);
+      if (!response.ok) {
+        throw new Error(data.error || 'Impossible de charger les souverains.');
+      }
+      setChiefs(Array.isArray(data) ? data : []);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Impossible de charger les souverains.');
     } finally {
       setLoading(false);
     }
@@ -78,18 +83,21 @@ export default function AdminChiefsPage() {
       biography: values.biography || ''
     };
 
-    const response = await fetch('/api/chiefs', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
+    try {
+      const response = await fetch('/api/chiefs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
 
-    const result = await response.json();
-    if (!response.ok) {
-      setMessage(result.error || 'Impossible d’ajouter le souverain.');
-    } else {
+      const result = await response.json();
+      if (!response.ok) {
+        setMessage(result.error || 'Impossible d’ajouter le souverain.');
+        return;
+      }
+
       setMessage('Souverain ajouté avec succès.');
       reset({
         order: values.order + 1,
@@ -103,9 +111,11 @@ export default function AdminChiefsPage() {
         biography: ''
       });
       await loadChiefs();
+    } catch {
+      setMessage('Une erreur réseau a empêché l’enregistrement.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   async function handleDelete(id: string) {
@@ -113,9 +123,21 @@ export default function AdminChiefsPage() {
       return;
     }
     setLoading(true);
-    await fetch(`/api/chiefs/${id}`, { method: 'DELETE' });
-    await loadChiefs();
-    setLoading(false);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/chiefs/${id}`, { method: 'DELETE' });
+      const result = await response.json();
+      if (!response.ok) {
+        setMessage(result.error || 'Impossible de supprimer le souverain.');
+        return;
+      }
+      setMessage('Souverain supprimé avec succès.');
+      await loadChiefs();
+    } catch {
+      setMessage('Une erreur réseau a empêché la suppression.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -141,19 +163,19 @@ export default function AdminChiefsPage() {
               <div className="grid gap-6 lg:grid-cols-2">
                 <label className="space-y-2 text-sm text-neutral-700">
                   <span>Ordre</span>
-                  <input type="number" {...register('order', { valueAsNumber: true })} className="w-full rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none ring-brand-200 transition focus:ring-2" />
+                  <input type="number" min={1} required {...register('order', { valueAsNumber: true })} className="w-full rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none ring-brand-200 transition focus:ring-2" />
                 </label>
                 <label className="space-y-2 text-sm text-neutral-700">
                   <span>Nom du souverain</span>
-                  <input type="text" {...register('fullName')} className="w-full rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none ring-brand-200 transition focus:ring-2" />
+                  <input type="text" required {...register('fullName')} className="w-full rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none ring-brand-200 transition focus:ring-2" />
                 </label>
                 <label className="space-y-2 text-sm text-neutral-700">
                   <span>Titre coutumier</span>
-                  <input type="text" {...register('customaryName')} className="w-full rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none ring-brand-200 transition focus:ring-2" />
+                  <input type="text" required {...register('customaryName')} className="w-full rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none ring-brand-200 transition focus:ring-2" />
                 </label>
                 <label className="space-y-2 text-sm text-neutral-700">
                   <span>Portrait (URL)</span>
-                  <input type="text" {...register('portrait')} className="w-full rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none ring-brand-200 transition focus:ring-2" />
+                  <input type="url" {...register('portrait')} className="w-full rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none ring-brand-200 transition focus:ring-2" />
                 </label>
               </div>
 

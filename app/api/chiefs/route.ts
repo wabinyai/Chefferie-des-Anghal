@@ -1,50 +1,58 @@
 import { NextResponse } from 'next/server';
+import { ZodError } from 'zod';
 import dbConnect from '@/lib/db/mongoose';
+import { chiefInputSchema, serializeChief, type ChiefRecord } from '@/lib/chiefs';
+import { getCmsSession } from '@/lib/auth/session';
 import Chief from '@/models/Chief';
 
+const CHIEF_FIELDS = 'order fullName customaryName portrait reignStart reignEnd predecessor successor biography status';
+
 export async function GET() {
-  await dbConnect();
-  const chiefs = await Chief.find().sort('order').populate('predecessor successor').lean();
-  return NextResponse.json(chiefs.map((chief) => ({
-    ...chief,
-    _id: chief._id.toString(),
-    predecessor: chief.predecessor ? { _id: (chief.predecessor as any)._id.toString(), fullName: (chief.predecessor as any).fullName } : null,
-    successor: chief.successor ? { _id: (chief.successor as any)._id.toString(), fullName: (chief.successor as any).fullName } : null
-  })));
+  try {
+    const session = await getCmsSession();
+    await dbConnect();
+
+    const filter = session ? {} : { status: 'published' };
+    const chiefs = await Chief.find(filter)
+      .select(CHIEF_FIELDS)
+      .sort({ order: 1 })
+      .populate('predecessor successor', 'fullName')
+      .lean<ChiefRecord[]>();
+
+    return NextResponse.json(chiefs.map(serializeChief));
+  } catch (error) {
+    console.error('Unable to load chiefs', error);
+    return NextResponse.json({ error: 'Unable to load chiefs.' }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
-  const payload = await req.json();
-  const {
-    order,
-    fullName,
-    customaryName,
-    portrait,
-    reignStart,
-    reignEnd,
-    predecessor,
-    successor,
-    biography
-  } = payload;
-
-  if (!fullName || !customaryName || typeof order !== 'number') {
-    return NextResponse.json({ error: 'Order, fullName and customaryName are required.' }, { status: 400 });
+  const session = await getCmsSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
   }
 
-  await dbConnect();
+  try {
+    const payload = chiefInputSchema.parse(await req.json());
+    await dbConnect();
 
-  const chief = await Chief.create({
-    order,
-    fullName,
-    customaryName,
-    portrait,
-    reignStart,
-    reignEnd,
-    predecessor: predecessor || undefined,
-    successor: successor || undefined,
-    biography: biography || '',
-    status: 'published'
-  });
+    const chief = await Chief.create({
+      ...payload,
+      biography: payload.biography ?? '',
+      status: payload.status ?? 'published',
+      createdBy: session.user.id,
+      updatedBy: session.user.id
+    });
 
-  return NextResponse.json({ message: 'Chief created', chief: { ...chief.toObject(), _id: chief._id.toString() } });
+    return NextResponse.json(
+      { message: 'Chief created', chief: serializeChief(chief.toObject() as ChiefRecord) },
+      { status: 201 }
+    );
+  } catch (error) {
+    if (error instanceof ZodError || error instanceof SyntaxError) {
+      return NextResponse.json({ error: 'The submitted chief data is invalid.' }, { status: 400 });
+    }
+    console.error('Unable to create chief', error);
+    return NextResponse.json({ error: 'Unable to create chief.' }, { status: 500 });
+  }
 }

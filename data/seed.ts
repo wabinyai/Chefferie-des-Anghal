@@ -5,9 +5,15 @@ import Role from '@/models/Role';
 import SiteSetting from '@/models/SiteSetting';
 
 export async function seedInitialData() {
+  const initialAdminEmail = process.env.INITIAL_ADMIN_EMAIL;
+  const initialAdminPassword = process.env.INITIAL_ADMIN_PASSWORD;
+  if (!initialAdminEmail || !initialAdminPassword || initialAdminPassword.length < 12) {
+    throw new Error('INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD (12+ characters) are required to seed data.');
+  }
+
   await dbConnect();
 
-  const passwordHash = await bcrypt.hash('ChangeMe123!', 10);
+  const passwordHash = await bcrypt.hash(initialAdminPassword, 12);
 
   const roles = [
     {
@@ -38,7 +44,7 @@ export async function seedInitialData() {
   }
 
   await User.updateOne(
-    { email: 'superadmin@anghal.example' },
+    { email: initialAdminEmail.trim().toLowerCase() },
     {
       $setOnInsert: {
         name: 'Super Admin Anghal',

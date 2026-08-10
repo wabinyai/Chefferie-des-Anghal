@@ -1,41 +1,45 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error('MONGODB_URI env var is required');
+interface MongooseCache {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
 }
 
 declare global {
-  var mongoose: {
-    conn: typeof mongoose | null;
-    promise: Promise<typeof mongoose> | null;
-  };
+  var mongooseCache: MongooseCache | undefined;
 }
 
-const globalWithMongoose = global as typeof globalThis & {
-  mongoose: {
-    conn: typeof mongoose | null;
-    promise: Promise<typeof mongoose> | null;
-  };
-};
-
-let cached = globalWithMongoose.mongoose || { conn: null, promise: null };
+const cached = global.mongooseCache ?? (global.mongooseCache = { conn: null, promise: null });
 
 async function dbConnect() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error('MONGODB_URI is not configured. Add it to .env.local.');
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI, {
+    const opts = {
       bufferCommands: false,
-      strictQuery: true
-    });
+    };
+
+    // Set Mongoose-specific configurations globally before connecting
+    mongoose.set('strictQuery', true);
+
+    cached.promise = mongoose.connect(uri, opts)
+      .then((mongooseInstance) => mongooseInstance)
+      .catch((err) => {
+        // Reset the cached promise on failure so subsequent attempts can try again
+        cached.promise = null;
+        throw err;
+      });
   }
 
   cached.conn = await cached.promise;
-  globalWithMongoose.mongoose = cached;
+
   return cached.conn;
 }
 
