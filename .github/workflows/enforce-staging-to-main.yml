@@ -1,0 +1,32 @@
+name: Branch policy enforcement
+
+on:
+  pull_request:
+    branches:
+      - main
+      - staging
+
+jobs:
+  require-staging-source:
+    if: github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require PR source to be staging
+        run: |
+          if [ "$GITHUB_HEAD_REF" != "staging" ]; then
+            echo "Only pull requests from the staging branch may target main."
+            echo "Please open your change against staging and merge staging into main."
+            exit 1
+          fi
+
+  prevent-direct-staging-work:
+    if: github.event.pull_request.base.ref == 'staging'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prevent direct staging PRs
+        run: |
+          if [ "$GITHUB_HEAD_REF" = "staging" ] || [ "$GITHUB_HEAD_REF" = "main" ]; then
+            echo "Do not work directly on staging or main."
+            echo "Create a new branch from staging and open a PR from that branch into staging."
+            exit 1
+          fi
