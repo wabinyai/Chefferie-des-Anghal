@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { SiteHeader } from '@/components/shared/SiteHeader';
+import { SiteFooter } from '@/components/shared/SiteFooter';
 
 export const metadata: Metadata = {
   title: 'Chefferie des Anghal',
@@ -19,7 +21,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-      <body>{children}</body>
+      <body className="min-h-screen bg-neutral-50 text-neutral-950">
+        <SiteHeader />
+        {children}
+        <SiteFooter />
+      </body>
     </html>
   );
 }

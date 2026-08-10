@@ -9,7 +9,7 @@ const heroConfig = {
 };
 
 const chiefMessage = {
-  portrait: '/images/chief-portrait-placeholder.jpg',
+  portrait: '/images/chief-portrait-placeholder.svg',
   fullName: 'Chef actuel — Porteur de la continuité',
   customaryTitle: 'Mwami de la Chefferie des Anghal',
   message:
